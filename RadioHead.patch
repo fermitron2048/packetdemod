@@ -1,0 +1,25 @@
+diff --git a/libraries/RadioHead/RH_RF69.h b/libraries/RadioHead/RH_RF69.h
+index 36dd97f..39e8a1b 100644
+--- a/libraries/RadioHead/RH_RF69.h
++++ b/libraries/RadioHead/RH_RF69.h
+@@ -725,6 +725,7 @@
+ 	OOK_Rb9_6Bw19_2,    ///< OOK, Whitening, Rb = 9.6kbs,  Rx Bandwidth = 19.2kHz. 
+ 	OOK_Rb19_2Bw38_4,   ///< OOK, Whitening, Rb = 19.2kbs, Rx Bandwidth = 38.4kHz. 
+ 	OOK_Rb32Bw64,       ///< OOK, Whitening, Rb = 32kbs,   Rx Bandwidth = 64kHz. 
++	OOK_Rb1Bw1_nw,         ///< OOK, No Whitening, Rb = 1kbs,    Rx Bandwidth = 1kHz.
+ 
+ //	Test,
+     } ModemConfigChoice;
+
+diff --git a/libraries/RadioHead/RH_RF69.cpp b/libraries/RadioHead/RH_RF69.cpp
+index dd88e2d..36457d6 100644
+--- a/libraries/RadioHead/RH_RF69.cpp
++++ b/libraries/RadioHead/RH_RF69.cpp
+@@ -77,6 +77,7 @@
+     { CONFIG_OOK,  0x0d, 0x05, 0x00, 0x10, 0xf3, 0xf3, CONFIG_WHITE}, // OOK_Rb9_6Bw19_2
+     { CONFIG_OOK,  0x06, 0x83, 0x00, 0x10, 0xf2, 0xf2, CONFIG_WHITE}, // OOK_Rb19_2Bw38_4
+     { CONFIG_OOK,  0x03, 0xe8, 0x00, 0x10, 0xe2, 0xe2, CONFIG_WHITE}, // OOK_Rb32Bw64
++    { CONFIG_OOK,  0x7d, 0x00, 0x00, 0x10, 0x88, 0x88, CONFIG_NOWHITE}, // OOK_Rb1Bw1_nw
+ 
+ //    { CONFIG_FSK,  0x68, 0x2b, 0x00, 0x52, 0x55, 0x55, CONFIG_WHITE}, // works: Rb1200 Fd 5000 bw10000, DCC 400
+ //    { CONFIG_FSK,  0x0c, 0x80, 0x02, 0x8f, 0x52, 0x52, CONFIG_WHITE}, // works 10/40/80
