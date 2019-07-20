@@ -164,7 +164,7 @@ def zmq_consumer():
     results_amplitude = context.socket(zmq.PULL)
     results_amplitude.connect("tcp://127.0.0.1:5558")
 
-    amplitude_ring = deque('',80000)  # Buffer that contains the phases of the received samples (1 more than we need)
+    amplitude_ring = deque('',80000)  # Buffer that contains the amplitude samples
     
     while True:
         # Read in the amplitude samples
@@ -192,7 +192,7 @@ def zmq_consumer():
                     else:
                         below_thresh = 0
         
-        # Send to python when ready
+        # Send to demodulator when ready
         if packet_finished:
             packet = list(amplitude_ring)
             del packet[packet_samples:]
