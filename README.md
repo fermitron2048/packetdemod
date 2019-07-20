@@ -1,17 +1,27 @@
 # RF Receiver, Demodulator, and Packet Parser
 
-Have you ever wanted to demodulate packets with your Software Defined Radio and GNU Radio, but haven't found a clear way of getting the samples out of GNU Radio and turning them into bits and bytes?  I have, so I set out on this project, which allows you to extract the bytes from packets from an RFM69 transmitter with an RTL-SDR and a Raspberry Pi (and other platforms that support GNU Radio).  The code is also easy to modify for demodulating other OOK signals, including signals from commercial products like weather stations, if the packet structure is known (or discovered).  This provides a powerful mechanism for collecting sensor data from a variety of devices with a single Software Defined Radio.
+Have you ever wanted to demodulate packets with your Software Defined Radio and GNU Radio, but haven't found a clear way of getting the samples out of GNU Radio and turning them into bits and bytes?  I have, so I set out on this project, which allows you to extract the bytes from packets from an RFM69 transmitter with an RTL-SDR and a Raspberry Pi (and other platforms that support GNU Radio).  The code is easy to modify for demodulating other OOK modulated signals, including signals from commercial products like weather stations, if the packet structure is known (or discovered).  This provides a powerful mechanism for collecting sensor data from a variety of devices with a single Software Defined Radio.
 
 <p align="center"><img src="img/rtlsdrpi.jpg"></p>
 
+Approximately 6000 raw samples (amplitude) from part of a packet:
+<p align="center"><img src="img/samples.png"></p>
 
-[packetdemod.py](packetdemod.py) demodulates OOK packets from an RFM69 transmitter, as an example.  The fine folks at Adafruit provide a board with an Arduino compatible microcontroller (Atmel) and an RFM69 transmitter that makes it easy to send sensor data over the air to your RTL-SDR, while running on batteries that can last over a year. They make several versions of this board that operate on the 433MHz and 900MHz ISM bands.  This receiver project can be used with any of the boards that use the RFM69 radios.  Since the default in the project uses 915MHz, the [Adafruit Feather 32u4 RFM69HCW RadioFruit](https://www.adafruit.com/product/3076) works well for the task.  These boards also let you read the voltage level of the battery and send it over the air, providing a handy way to notify yourself when the battery is getting low.  And in sleep mode, this device only uses 300uA when not transmitting or processing, resulting in extremely long battery life.
+Extracted bits from these samples:
+<p align="center"><img src="img/threshold.png"></p>
+
+Full packet bytes (all 64k samples):
+
+`2d:d4:15:ff:ff:00:00:48:65:6c:6c:6f:20:57:6f:72:6c:64:20:23:35:39:39:30:09:87:80 -......Hello World #5990...`
+
+
+[packetdemod.py](packetdemod.py) demodulates OOK modulated packets from an RFM69 transmitter, as an example.  The fine folks at Adafruit provide a board with an Arduino compatible microcontroller (Atmel) and an RFM69 transmitter that makes it easy to send sensor data over the air to your RTL-SDR, while running on batteries that can last over a year. They make several versions of this board that operate on the 433MHz and 900MHz ISM bands.  This receiver project can be used with any of the boards that use the RFM69 radios.  Since the default in the project uses 915MHz, the [Adafruit Feather 32u4 RFM69HCW RadioFruit](https://www.adafruit.com/product/3076) works well for the task.  These boards also let you read the voltage level of the battery and send it over the air, providing a handy way to notify yourself when the battery is getting low.  And in sleep mode, this device only uses 300uA when not transmitting or processing, resulting in extremely long battery life.
 
 <p align="center"><img src="img/rfm69.jpg"></p>
 
 The [transmitter.ino](transmitter/transmitter.ino) file can be loaded onto the RFM69 transmitter via the [Arduino IDE](https://www.arduino.cc/en/Main/Software).  Instructions for loading the Feather 32u4 RFM69HCW using the Arduino IDE can be found [here](https://learn.adafruit.com/adafruit-feather-32u4-radio-with-rfm69hcw-module/using-with-arduino-ide).  Make sure to add the [Adafruit boards manager URL](https://learn.adafruit.com/add-boards-arduino-v164/setup) to the IDE if you haven't already.  Also, you'll need the [RadioHead](http://www.airspayce.com/mikem/arduino/RadioHead/) Arduino library.  The `transmitter.ino` example is adapted from one of the RadioHead examples. 
 
-You'll also need to apply the patch for RadioHead to disable [whitening](https://mrmekon.tumblr.com/post/17824495815/rf-transmission-whitening).  Run this command from your Arduino directory, replacing the `..` with the path to the `RadioHead.patch` file:
+You'll also need to apply the [patch](RadioHead.patch) for RadioHead to disable [whitening](https://mrmekon.tumblr.com/post/17824495815/rf-transmission-whitening).  Run this command from your Arduino directory, replacing the `..` with the path to the `RadioHead.patch` file:
 
 `patch -p1 <../RadioHead.patch`  
 
@@ -108,7 +118,7 @@ Here is an example set of samples for a few bits of our packet:
 <p align="center"><img src="img/samples.png"></p>
 
 #### Finding the midpoint
-Once we have the samples, we're ready to clean up the signal.  Ossmann's midpoint function thresholds the signal, making it easy to see what parts of the signal are high and low -- in this case, high amplitude (one) and low amplitude (zero).  In this example, the signal is strong, so there is no fluctuation between one and zero during each timeslice.  This is how we want the signal to be, but it is still possible to recover the clock, even with inter-timeslice fluctuations, when the fundamental frequency is still prominent.  Notice how some regions of one's last longer than others -- this represents a string of two or more one's strung together.  Since too many ones or zeros together normally confuses clock recovery algorithms, the traditional way to handle this situation is with algorithms like [whitening](https://mrmekon.tumblr.com/post/17824495815/rf-transmission-whitening) or [manchester coding](https://en.wikipedia.org/wiki/Manchester_code) that create transitions between one and zero even when transmitting bytes that are all ones or all zeros.  In the case of manchester coding, it guarantees regular transitions, to ensure that the clock recovery algorithm won't lose synchronization.  In our case, using whole packet clock recovery allows for more reliable clock recovery, even with long strings of ones or zeros.   
+Once we have the samples, we're ready to clean up the signal.  Ossmann's midpoint function thresholds the signal, making it easy to see what parts of the signal are high and low -- in this case, high amplitude (one) and low amplitude (zero).  Notice how some regions of one's last longer than others -- this represents a string of two or more one's strung together.  Since too many ones or zeros together normally confuses clock recovery algorithms, the traditional way to handle this situation is with algorithms like [whitening](https://mrmekon.tumblr.com/post/17824495815/rf-transmission-whitening) or [manchester coding](https://en.wikipedia.org/wiki/Manchester_code) that create transitions between one and zero even when transmitting bytes that are all ones or all zeros.  In the case of manchester coding, it guarantees regular transitions, to ensure that the clock recovery algorithm won't lose synchronization.  In our case, using whole packet clock recovery allows for more reliable clock recovery, even with long strings of ones or zeros.   
 
 <p align="center"><img src="img/midpoint.png"></p>
 
