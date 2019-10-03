@@ -1,4 +1,4 @@
-# RF Receiver, Demodulator, and Packet Parser
+# Packet Demod: RF Receiver, Demodulator, and Packet Parser
 
 Have you ever wanted to demodulate packets with your Software Defined Radio and GNU Radio, but haven't found a clear way of getting the samples out of GNU Radio and turning them into bits and bytes?  I have, so I set out on this project, which allows you to extract the bytes from packets from an RFM69 transmitter with an RTL-SDR and a Raspberry Pi (and other platforms that support GNU Radio).  The code is easy to modify for demodulating other OOK modulated signals, including signals from commercial products like weather stations, if the packet structure is known (or discovered).  This provides a powerful mechanism for collecting sensor data from a variety of devices with a single Software Defined Radio.
 
